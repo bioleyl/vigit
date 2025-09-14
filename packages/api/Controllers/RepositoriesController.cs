@@ -12,24 +12,24 @@ namespace Api.Controllers;
 [Authorize]
 public class RepositoriesController : ControllerBase
 {
-  private readonly IRepositoryService _service;
+  private readonly IRepositoryService _repositoryService;
 
-  public RepositoriesController(IRepositoryService service)
+  public RepositoriesController(IRepositoryService repositoryService)
   {
-    _service = service;
+    _repositoryService = repositoryService;
   }
 
   [HttpGet("{id}")]
   public ActionResult<RepositoryWithCollaboratorsResponse> GetById(int id)
   {
-    var repo = _service.GetById(id);
+    var repo = _repositoryService.GetById(id);
     return repo == null ? NotFound() : Ok(repo);
   }
 
   [HttpGet("my")]
   public ActionResult<List<RepositoryWithCollaboratorsResponse>> GetMyRepositories()
   {
-    var repos = _service.GetByOwnerId(User.GetUserId());
+    var repos = _repositoryService.GetByOwnerId(User.GetUserId());
     return Ok(repos);
   }
 
@@ -38,7 +38,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      var created = _service.Create(request, User.GetUserId());
+      var created = _repositoryService.Create(request, User.GetUserId());
       return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
     catch (ArgumentException ex)
@@ -52,7 +52,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      var updated = _service.Update(id, request, User.GetUserId(), User.IsAdmin());
+      var updated = _repositoryService.Update(id, request, User.GetUserId(), User.IsAdmin());
       return updated == null ? NotFound() : Ok(updated);
     }
     catch (UnauthorizedAccessException)
@@ -74,7 +74,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      _service.Delete(id, User.GetUserId(), User.IsAdmin());
+      _repositoryService.Delete(id, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -92,7 +92,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      _service.AddCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      _repositoryService.AddCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -114,7 +114,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      _service.RemoveCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      _repositoryService.RemoveCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)

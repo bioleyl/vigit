@@ -13,10 +13,12 @@ namespace Api.Controllers;
 public class UsersController : ControllerBase
 {
   private readonly IUserService _userService;
+  private readonly IRepositoryService _repositoryService;
 
-  public UsersController(IUserService userService)
+  public UsersController(IUserService userService, IRepositoryService repositoryService)
   {
     _userService = userService;
+    _repositoryService = repositoryService;
   }
 
   [HttpGet]
@@ -31,6 +33,17 @@ public class UsersController : ControllerBase
   {
     var user = _userService.GetById(id);
     return user == null ? NotFound() : Ok(user);
+  }
+
+  [HttpGet("{id}/repositories")]
+  public ActionResult<List<RepositoryResponse>> GetUserRepositories(int id)
+  {
+    var user = _userService.GetById(id);
+    if (user == null)
+      return NotFound();
+
+    var repos = _repositoryService.GetByOwnerId(id);
+    return Ok(repos);
   }
 
   [HttpPost]
