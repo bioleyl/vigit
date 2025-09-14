@@ -8,7 +8,7 @@ public interface IUserService
   public List<UserResponse> GetAll();
   public UserResponse? GetById(int id);
   public UserResponse Create(CreateUserRequest request, bool requestingUserIsAdmin);
-  public UserResponse? Update(
+  public UserResponse Update(
     int idToUpdate,
     UpdateUserRequest request,
     int requestingUserId,

@@ -11,6 +11,12 @@ public class User
   public string Role { get; set; } = "User"; // default role
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+  // Owned repositories
+  public List<Repository> OwnedRepositories { get; set; } = [];
+
+  // Collaborations
+  public List<UserRepository> Collaborations { get; set; } = [];
+
   public User() { }
 
   public User(CreateUserRequest request)
@@ -29,25 +35,4 @@ public class User
   {
     return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
   }
-
-  public void Update(UpdateUserRequest request)
-  {
-    if (!string.IsNullOrEmpty(request.Username))
-      Username = request.Username;
-
-    if (!string.IsNullOrEmpty(request.Password))
-      SetPassword(request.Password);
-
-    if (!string.IsNullOrEmpty(request.Role))
-      Role = request.Role;
-  }
-
-  public UserResponse ToResponse() =>
-    new()
-    {
-      Id = Id,
-      Username = Username,
-      Role = Role,
-      CreatedAt = CreatedAt,
-    };
 }

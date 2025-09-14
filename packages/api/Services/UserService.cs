@@ -8,6 +8,7 @@ namespace Api.Services;
 
 public class UserService : IUserService
 {
+  private const string UserNotFoundMessage = "User not found";
   private readonly IUserRepository _repo;
 
   public UserService(IUserRepository repo)
@@ -17,13 +18,13 @@ public class UserService : IUserService
 
   public List<UserResponse> GetAll()
   {
-    return [.. _repo.GetAll().Select(u => u.ToResponse())];
+    return [.. _repo.GetAll().Select(u => new UserResponse(u))];
   }
 
   public UserResponse? GetById(int id)
   {
     var user = _repo.GetById(id);
-    return user?.ToResponse();
+    return user == null ? null : new UserResponse(user);
   }
 
   public UserResponse Create(CreateUserRequest request, bool requestingUserIsAdmin)
@@ -38,17 +39,17 @@ public class UserService : IUserService
     var user = new User { Username = request.Username, Role = role };
     user.SetPassword(request.Password);
     _repo.Add(user);
-    return user.ToResponse();
+    return new UserResponse(user);
   }
 
-  public UserResponse? Update(
+  public UserResponse Update(
     int idToUpdate,
     UpdateUserRequest request,
     int requestingUserId,
     bool requestingUserIsAdmin
   )
   {
-    var user = _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException("User not found");
+    var user = _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
     if (requestingUserId != idToUpdate && !requestingUserIsAdmin)
@@ -75,12 +76,12 @@ public class UserService : IUserService
     }
 
     _repo.Update(user);
-    return user.ToResponse();
+    return new UserResponse(user);
   }
 
   public void Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
   {
-    var user = _repo.GetById(idToDelete) ?? throw new KeyNotFoundException("User not found");
+    var user = _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
     if (requestingUserId != idToDelete && !requestingUserIsAdmin)
