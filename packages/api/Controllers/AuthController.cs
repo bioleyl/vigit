@@ -38,7 +38,6 @@ public class AuthController : ControllerBase
       new Claim(ClaimTypes.Role, user.Role),
     };
 
-    var token = _jwtService.CreateToken(claims);
-    return Ok(new { Token = token });
+    return Ok(new { Token = _jwtService.CreateToken(claims) });
   }
 }
