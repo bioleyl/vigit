@@ -1,62 +1,91 @@
-using Api.Data;
 using Api.Entities;
 using Api.Models.Requests;
 using Api.Models.Responses;
+using Api.Repositories.Interfaces;
 using Api.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
 public class UserService : IUserService
 {
-  private readonly AppDbContext _context;
+  private readonly IUserRepository _repo;
 
-  public UserService(AppDbContext context)
+  public UserService(IUserRepository repo)
   {
-    _context = context;
+    _repo = repo;
   }
 
-  public async Task<List<UserResponse>> GetAllAsync()
+  public List<UserResponse> GetAll()
   {
-    return await _context.Users.Select(u => u.ToResponse()).ToListAsync();
+    return [.. _repo.GetAll().Select(u => u.ToResponse())];
   }
 
-  public async Task<UserResponse?> GetByIdAsync(int id)
+  public UserResponse? GetById(int id)
   {
-    var user = await _context.Users.FindAsync(id);
+    var user = _repo.GetById(id);
     return user?.ToResponse();
   }
 
-  public async Task<UserResponse> CreateAsync(CreateUserRequest request)
+  public UserResponse Create(CreateUserRequest request, bool requestingUserIsAdmin)
   {
-    var user = new User(request);
+    // Check if username already exists
+    if (_repo.GetByUsername(request.Username) != null)
+      throw new ArgumentException("Username already exists");
 
-    _context.Users.Add(user);
-    await _context.SaveChangesAsync();
+    // Role is default to "User" if not provided by admin
+    var role = requestingUserIsAdmin && !string.IsNullOrEmpty(request.Role) ? request.Role : "User";
 
+    var user = new User { Username = request.Username, Role = role };
+    user.SetPassword(request.Password);
+    _repo.Add(user);
     return user.ToResponse();
   }
 
-  public async Task<UserResponse?> UpdateAsync(int id, UpdateUserRequest request)
+  public UserResponse? Update(
+    int idToUpdate,
+    UpdateUserRequest request,
+    int requestingUserId,
+    bool requestingUserIsAdmin
+  )
   {
-    var user = await _context.Users.FindAsync(id);
-    if (user == null)
-      return null;
+    var user = _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException("User not found");
 
-    user.Update(request);
-    await _context.SaveChangesAsync();
+    // Check permissions
+    if (requestingUserId != idToUpdate && !requestingUserIsAdmin)
+      throw new UnauthorizedAccessException("You do not have permission to update this user");
 
+    // Check username uniqueness if it's being changed
+    if (!string.IsNullOrEmpty(request.Username) && request.Username != user.Username)
+    {
+      if (_repo.GetByUsername(request.Username) != null)
+        throw new ArgumentException("Username already exists");
+      user.Username = request.Username;
+    }
+
+    // Update password if provided
+    if (!string.IsNullOrEmpty(request.Password))
+      user.SetPassword(request.Password);
+
+    // Update role if provided and requester is admin
+    if (!string.IsNullOrEmpty(request.Role))
+    {
+      if (!requestingUserIsAdmin)
+        throw new UnauthorizedAccessException("Only admins can change roles");
+      user.Role = request.Role;
+    }
+
+    _repo.Update(user);
     return user.ToResponse();
   }
 
-  public async Task<bool> DeleteAsync(int id)
+  public void Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
   {
-    var user = await _context.Users.FindAsync(id);
-    if (user == null)
-      return false;
+    var user = _repo.GetById(idToDelete) ?? throw new KeyNotFoundException("User not found");
 
-    _context.Users.Remove(user);
-    await _context.SaveChangesAsync();
-    return true;
+    // Check permissions
+    if (requestingUserId != idToDelete && !requestingUserIsAdmin)
+      throw new UnauthorizedAccessException("You do not have permission to delete this user");
+
+    _repo.Delete(user);
   }
 }

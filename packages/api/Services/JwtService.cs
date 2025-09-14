@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Api.Entities;
 using Api.Services.Interfaces;
 using Api.Settings;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -29,8 +30,15 @@ public class JwtService : IJwtService
       ValidAudience = _jwt.Audience,
     };
 
-  public string CreateToken(IEnumerable<Claim> claims)
+  public string CreateToken(User user)
   {
+    // Generate JWT token
+    var claims = new[]
+    {
+      new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+      new Claim(ClaimTypes.Name, user.Username),
+      new Claim(ClaimTypes.Role, user.Role),
+    };
     var creds = new SigningCredentials(GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256);
 
     var handler = new JsonWebTokenHandler();

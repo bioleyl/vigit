@@ -31,13 +31,6 @@ public class AuthController : ControllerBase
       return Unauthorized(new { message = "Invalid credentials" });
     }
 
-    // Generate JWT token
-    var claims = new[]
-    {
-      new Claim(ClaimTypes.Name, user.Username),
-      new Claim(ClaimTypes.Role, user.Role),
-    };
-
-    return Ok(new { Token = _jwtService.CreateToken(claims) });
+    return Ok(new { Token = _jwtService.CreateToken(user) });
   }
 }

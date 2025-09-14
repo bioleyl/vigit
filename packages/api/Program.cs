@@ -1,4 +1,6 @@
 using Api.Extensions;
+using Api.Repositories;
+using Api.Repositories.Interfaces;
 using Api.Services;
 using Api.Services.Interfaces;
 
@@ -9,6 +11,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddControllers();
 
 // Add services.
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

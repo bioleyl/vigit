@@ -5,9 +5,14 @@ namespace Api.Services.Interfaces;
 
 public interface IUserService
 {
-  public Task<List<UserResponse>> GetAllAsync();
-  public Task<UserResponse?> GetByIdAsync(int id);
-  public Task<UserResponse> CreateAsync(CreateUserRequest request);
-  public Task<UserResponse?> UpdateAsync(int id, UpdateUserRequest request);
-  public Task<bool> DeleteAsync(int id);
+  public List<UserResponse> GetAll();
+  public UserResponse? GetById(int id);
+  public UserResponse Create(CreateUserRequest request, bool requestingUserIsAdmin);
+  public UserResponse? Update(
+    int idToUpdate,
+    UpdateUserRequest request,
+    int requestingUserId,
+    bool requestingUserIsAdmin
+  );
+  public void Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin);
 }

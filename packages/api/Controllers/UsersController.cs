@@ -1,3 +1,4 @@
+using Api.Extensions;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Services.Interfaces;
@@ -19,36 +20,74 @@ public class UsersController : ControllerBase
   }
 
   [HttpGet]
-  public async Task<ActionResult<List<UserResponse>>> GetAll()
+  public ActionResult<List<UserResponse>> GetAll()
   {
-    return Ok(await _userService.GetAllAsync());
+    var users = _userService.GetAll();
+    return Ok(users);
   }
 
   [HttpGet("{id}")]
-  public async Task<ActionResult<UserResponse>> GetById(int id)
+  public ActionResult<UserResponse> GetById(int id)
   {
-    var user = await _userService.GetByIdAsync(id);
+    var user = _userService.GetById(id);
     return user == null ? NotFound() : Ok(user);
   }
 
   [HttpPost]
-  public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request)
+  public ActionResult<UserResponse> Create(CreateUserRequest request)
   {
-    var created = await _userService.CreateAsync(request);
-    return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    try
+    {
+      var created = _userService.Create(request, User.IsAdmin());
+      return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Forbid();
+    }
+    catch (ArgumentException ex)
+    {
+      return BadRequest(new { message = ex.Message });
+    }
   }
 
   [HttpPut("{id}")]
-  public async Task<ActionResult<UserResponse>> Update(int id, UpdateUserRequest request)
+  public ActionResult<UserResponse> Update(int id, UpdateUserRequest request)
   {
-    var updated = await _userService.UpdateAsync(id, request);
-    return updated == null ? NotFound() : Ok(updated);
+    try
+    {
+      var updated = _userService.Update(id, request, User.GetUserId(), User.IsAdmin());
+      return updated == null ? NotFound() : Ok(updated);
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Forbid();
+    }
+    catch (KeyNotFoundException)
+    {
+      return NotFound();
+    }
+    catch (ArgumentException ex)
+    {
+      return BadRequest(new { message = ex.Message });
+    }
   }
 
   [HttpDelete("{id}")]
-  public async Task<IActionResult> Delete(int id)
+  public IActionResult Delete(int id)
   {
-    var deleted = await _userService.DeleteAsync(id);
-    return deleted ? NoContent() : NotFound();
+    try
+    {
+      _userService.Delete(id, User.GetUserId(), User.IsAdmin());
+      return NoContent();
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Forbid();
+    }
+    catch (KeyNotFoundException)
+    {
+      return NotFound();
+    }
   }
 }

@@ -1,5 +1,5 @@
 using System.Net.Http.Headers;
-using System.Security.Claims;
+using Api.Entities;
 using Api.Services.Interfaces;
 
 namespace Api.Tests.Helpers;
@@ -13,8 +13,13 @@ public static class TestAuthHelper
     string role
   )
   {
-    var claims = new[] { new Claim(ClaimTypes.Name, username), new Claim(ClaimTypes.Role, role) };
-    var token = jwtService.CreateToken(claims);
+    User user = new()
+    {
+      Id = 1,
+      Username = username,
+      Role = role,
+    };
+    var token = jwtService.CreateToken(user);
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
   }
 }
