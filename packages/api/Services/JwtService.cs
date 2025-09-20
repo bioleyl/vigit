@@ -1,8 +1,11 @@
 using System.Security.Claims;
 using System.Text;
 using Api.Entities;
+using Api.Models.Responses;
+using Api.Repositories.Interfaces;
 using Api.Services.Interfaces;
 using Api.Settings;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -11,24 +14,43 @@ namespace Api.Services;
 public class JwtService : IJwtService
 {
   private readonly JwtSettings _jwt;
+  private readonly IUserRepository _userRepository;
 
-  public JwtService(JwtSettings jwtSettings)
+  public JwtService(IOptions<JwtSettings> jwtSettings, IUserRepository userRepository)
   {
-    _jwt = jwtSettings;
+    _jwt = jwtSettings.Value;
+    _userRepository = userRepository;
   }
 
-  public SymmetricSecurityKey GetSymmetricSecurityKey() => new(Encoding.UTF8.GetBytes(_jwt.Key));
-
-  public TokenValidationParameters GetTokenValidationParameters() =>
-    new()
+  public static TokenValidationParameters GetTokenValidationParameters(JwtSettings jwtSettings)
+  {
+    return new()
     {
       ValidateIssuerSigningKey = true,
-      IssuerSigningKey = GetSymmetricSecurityKey(),
+      IssuerSigningKey = GetSymmetricSecurityKey(jwtSettings),
       ValidateIssuer = true,
-      ValidIssuer = _jwt.Issuer,
+      ValidIssuer = jwtSettings.Issuer,
       ValidateAudience = true,
-      ValidAudience = _jwt.Audience,
+      ValidAudience = jwtSettings.Audience,
     };
+  }
+
+  private static SymmetricSecurityKey GetSymmetricSecurityKey(JwtSettings jwtSettings)
+  {
+    return new(Encoding.UTF8.GetBytes(jwtSettings.Key));
+  }
+
+  public async Task<LoginResponse> Login(string username, string password)
+  {
+    var user = await _userRepository.GetByUsername(username);
+    if (user == null || !user.VerifyPassword(password))
+    {
+      throw new UnauthorizedAccessException("Invalid credentials");
+    }
+
+    var token = CreateToken(user);
+    return new LoginResponse { Token = token };
+  }
 
   public string CreateToken(User user)
   {
@@ -39,7 +61,10 @@ public class JwtService : IJwtService
       new Claim(ClaimTypes.Name, user.Username),
       new Claim(ClaimTypes.Role, user.Role),
     };
-    var creds = new SigningCredentials(GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256);
+    var creds = new SigningCredentials(
+      GetSymmetricSecurityKey(_jwt),
+      SecurityAlgorithms.HmacSha256
+    );
 
     var handler = new JsonWebTokenHandler();
     var token = handler.CreateToken(

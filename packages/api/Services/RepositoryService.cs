@@ -38,7 +38,7 @@ public class RepositoryService : IRepositoryService
   {
     var existing = await _repo.GetByOwnerId(ownerId);
     if (existing.Any(r => r.Name == request.Name))
-      throw new ArgumentException("Repository name already exists for this user");
+      throw new ArgumentException("Repository name already exists for this user", nameof(request));
 
     var repo = new Repository(
       name: request.Name,
@@ -70,7 +70,13 @@ public class RepositoryService : IRepositoryService
     {
       var existing = await _repo.GetByOwnerId(repo.OwnerId);
       if (existing.Any(r => r.Name == request.Name))
-        throw new ArgumentException("Repository name already exists for this user");
+      {
+        throw new ArgumentException(
+          "Repository name already exists for this user",
+          nameof(request)
+        );
+      }
+
       repo.Name = request.Name;
     }
 
@@ -109,7 +115,7 @@ public class RepositoryService : IRepositoryService
 
     // Check if user is already a collaborator
     if (repo.Collaborators.Any(ur => ur.UserId == userIdToAdd))
-      throw new ArgumentException("User is already a collaborator");
+      throw new ArgumentException("User is already a collaborator", nameof(userIdToAdd));
 
     var userRepository = new UserRepository(userId: userIdToAdd, repositoryId: id);
     await _repo.AddCollaborator(userRepository);

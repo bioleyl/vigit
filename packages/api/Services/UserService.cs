@@ -32,7 +32,7 @@ public class UserService : IUserService
   {
     // Check if username already exists
     if (await _repo.GetByUsername(request.Username) != null)
-      throw new ArgumentException("Username already exists");
+      throw new ArgumentException("Username already exists", nameof(request));
 
     // Role is default to "User" if not provided by admin
     var role = requestingUserIsAdmin && !string.IsNullOrEmpty(request.Role) ? request.Role : "User";
@@ -60,7 +60,7 @@ public class UserService : IUserService
     if (!string.IsNullOrEmpty(request.Username) && request.Username != user.Username)
     {
       if (await _repo.GetByUsername(request.Username) != null)
-        throw new ArgumentException("Username already exists");
+        throw new ArgumentException("Username already exists", nameof(request));
       user.Username = request.Username;
     }
 

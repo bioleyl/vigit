@@ -1,12 +1,10 @@
-using System.Security.Claims;
 using Api.Entities;
-using Microsoft.IdentityModel.Tokens;
+using Api.Models.Responses;
 
 namespace Api.Services.Interfaces;
 
 public interface IJwtService
 {
+  public Task<LoginResponse> Login(string username, string password);
   public string CreateToken(User user);
-  public SymmetricSecurityKey GetSymmetricSecurityKey();
-  public TokenValidationParameters GetTokenValidationParameters();
 }

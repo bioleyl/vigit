@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Tests.Helpers;
 
@@ -15,7 +16,7 @@ public class AuthControllerTests : IntegrationTestBase
   [Fact]
   public async Task Login_WithValidUser_ReturnsOk()
   {
-    var request = new { Username = "admin", Password = "admin" };
+    LoginRequest request = new() { Username = "admin", Password = "admin" };
     var response = await _client.PostAsJsonAsync(LoginUrl, request);
     response.EnsureSuccessStatusCode();
 
@@ -26,7 +27,7 @@ public class AuthControllerTests : IntegrationTestBase
   [Fact]
   public async Task Login_WithInvalidPassword_ReturnsUnauthorized()
   {
-    var request = new { Username = "admin", Password = "wrongpassword" };
+    LoginRequest request = new() { Username = "admin", Password = "wrongpassword" };
     var response = await _client.PostAsJsonAsync(LoginUrl, request);
     Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
 
@@ -38,7 +39,7 @@ public class AuthControllerTests : IntegrationTestBase
   [Fact]
   public async Task Login_WithNonexistentUser_ReturnsUnauthorized()
   {
-    var request = new { Username = "doesnotexist", Password = "password" };
+    LoginRequest request = new() { Username = "doesnotexist", Password = "password" };
     var response = await _client.PostAsJsonAsync(LoginUrl, request);
     Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
 

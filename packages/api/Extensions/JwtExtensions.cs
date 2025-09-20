@@ -21,10 +21,6 @@ public static class JwtExtensions
     // Registering settings for DI
     services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
-    // Register JwtService in DI
-    var jwtService = new JwtService(jwtSettings);
-    services.AddSingleton<IJwtService>(jwtService);
-
     // Configure authentication with JWT Bearer
     services
       .AddAuthentication(options =>
@@ -36,7 +32,7 @@ public static class JwtExtensions
       {
         options.RequireHttpsMetadata = false;
         options.SaveToken = true;
-        options.TokenValidationParameters = jwtService.GetTokenValidationParameters();
+        options.TokenValidationParameters = JwtService.GetTokenValidationParameters(jwtSettings);
       });
 
     return services;

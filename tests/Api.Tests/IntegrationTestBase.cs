@@ -14,13 +14,13 @@ public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFa
   protected IntegrationTestBase(CustomWebApplicationFactory factory)
   {
     _client = factory.CreateClient();
+    _scope = factory.Services.CreateScope();
 
     // Add a JWT token for authentication (default to admin user)
-    var jwtService = factory.Services.GetRequiredService<IJwtService>();
+    var jwtService = _scope.ServiceProvider.GetRequiredService<IJwtService>();
     _client.AddJwtToken(jwtService, "admin", "Admin");
 
     // Create a scope so we can work with DI services
-    _scope = factory.Services.CreateScope();
     var db = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     ResetDatabase(db);
