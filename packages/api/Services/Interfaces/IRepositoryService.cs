@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Api.Models.Requests;
 using Api.Models.Responses;
 
@@ -5,27 +6,20 @@ namespace Api.Services.Interfaces;
 
 public interface IRepositoryService
 {
-  public Task<RepositoryWithCollaboratorsResponse?> GetById(int id);
-  public Task<List<RepositoryResponse>> GetByOwnerId(int ownerId);
-  public Task<RepositoryResponse> Create(CreateRepositoryRequest request, int ownerId);
+  public Task<RepositoryWithCollaboratorsResponse> GetById(int id, ClaimsPrincipal requester);
+  public Task<List<RepositoryResponse>> GetByOwnerId(int ownerId, ClaimsPrincipal requester);
+  public Task<RepositoryResponse> Create(
+    CreateRepositoryRequest request,
+    int ownerId,
+    ClaimsPrincipal requester
+  );
   public Task<RepositoryResponse> Update(
     int idToUpdate,
     UpdateRepositoryRequest request,
-    int requestingUserId,
-    bool requestingUserIsAdmin
+    ClaimsPrincipal requester
   );
-  public Task Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin);
+  public Task Delete(int idToDelete, ClaimsPrincipal requester);
 
-  public Task AddCollaborator(
-    int id,
-    int userIdToAdd,
-    int requestingUserId,
-    bool requestingUserIsAdmin
-  );
-  public Task RemoveCollaborator(
-    int id,
-    int userIdToRemove,
-    int requestingUserId,
-    bool requestingUserIsAdmin
-  );
+  public Task AddCollaborator(int id, int userIdToAdd, ClaimsPrincipal requester);
+  public Task RemoveCollaborator(int id, int userIdToRemove, ClaimsPrincipal requester);
 }

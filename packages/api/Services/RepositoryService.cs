@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Api.Entities;
+using Api.Extensions;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Repositories.Interfaces;
@@ -16,26 +18,40 @@ public class RepositoryService : IRepositoryService
     _repo = repo;
   }
 
-  public async Task<RepositoryWithCollaboratorsResponse?> GetById(int id)
+  public async Task<RepositoryWithCollaboratorsResponse> GetById(int id, ClaimsPrincipal requester)
   {
-    var repo = await _repo.GetById(id);
-    return repo == null ? null : new RepositoryWithCollaboratorsResponse(repo);
+    var repo = await _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
+
+    // Check permissions
+    if (requester.GetUserId() != repo.OwnerId && !requester.IsAdmin())
+      throw new UnauthorizedAccessException("You do not have permission to view this repository");
+
+    return new RepositoryWithCollaboratorsResponse(repo);
   }
 
-  public async Task<List<RepositoryResponse>> GetByOwnerId(int ownerId)
+  public async Task<List<RepositoryResponse>> GetByOwnerId(int ownerId, ClaimsPrincipal requester)
   {
+    if (requester.GetUserId() != ownerId && !requester.IsAdmin())
+    {
+      throw new UnauthorizedAccessException(
+        "You do not have permission to view these repositories"
+      );
+    }
+
     var repos = await _repo.GetByOwnerId(ownerId);
     return repos.Select(r => new RepositoryResponse(r)).ToList();
   }
 
-  public async Task<List<RepositoryResponse>> GetAll()
+  public async Task<RepositoryResponse> Create(
+    CreateRepositoryRequest request,
+    int ownerId,
+    ClaimsPrincipal requester
+  )
   {
-    var repos = await _repo.GetAll();
-    return repos.Select(r => new RepositoryResponse(r)).ToList();
-  }
+    // Check permissions
+    if (ownerId != requester.GetUserId() && !requester.IsAdmin())
+      throw new UnauthorizedAccessException("You do not have permission to update this repository");
 
-  public async Task<RepositoryResponse> Create(CreateRepositoryRequest request, int ownerId)
-  {
     var existing = await _repo.GetByOwnerId(ownerId);
     if (existing.Any(r => r.Name == request.Name))
       throw new ArgumentException("Repository name already exists for this user", nameof(request));
@@ -54,15 +70,14 @@ public class RepositoryService : IRepositoryService
   public async Task<RepositoryResponse> Update(
     int idToUpdate,
     UpdateRepositoryRequest request,
-    int requestingUserId,
-    bool requestingUserIsAdmin
+    ClaimsPrincipal requester
   )
   {
     var repo =
       await _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
-    if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
+    if (repo.OwnerId != requester.GetUserId() && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to update this repository");
 
     // Check name uniqueness if it's being changed
@@ -88,29 +103,24 @@ public class RepositoryService : IRepositoryService
     return new RepositoryResponse(repo);
   }
 
-  public async Task Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
+  public async Task Delete(int idToDelete, ClaimsPrincipal requester)
   {
     var repo =
       await _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
-    if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
+    if (repo.OwnerId != requester.GetUserId() && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to delete this repository");
 
     await _repo.Delete(repo);
   }
 
-  public async Task AddCollaborator(
-    int id,
-    int userIdToAdd,
-    int requestingUserId,
-    bool requestingUserIsAdmin
-  )
+  public async Task AddCollaborator(int id, int userIdToAdd, ClaimsPrincipal requester)
   {
     var repo = await _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
-    if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
+    if (repo.OwnerId != requester.GetUserId() && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to modify this repository");
 
     // Check if user is already a collaborator
@@ -121,17 +131,12 @@ public class RepositoryService : IRepositoryService
     await _repo.AddCollaborator(userRepository);
   }
 
-  public async Task RemoveCollaborator(
-    int id,
-    int userIdToRemove,
-    int requestingUserId,
-    bool requestingUserIsAdmin
-  )
+  public async Task RemoveCollaborator(int id, int userIdToRemove, ClaimsPrincipal requester)
   {
     var repo = await _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
-    if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
+    if (repo.OwnerId != requester.GetUserId() && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to modify this repository");
 
     // Check if user is a collaborator

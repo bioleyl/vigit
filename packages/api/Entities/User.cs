@@ -13,6 +13,7 @@ public class User
 
   public List<Repository> OwnedRepositories { get; set; } = [];
   public List<UserRepository> Collaborations { get; set; } = [];
+  public List<SshKey> SshKeys { get; set; } = [];
 
   protected User() { }
 

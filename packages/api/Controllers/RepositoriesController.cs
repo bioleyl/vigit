@@ -1,4 +1,3 @@
-using Api.Extensions;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Services.Interfaces;
@@ -8,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/repositories")]
 [Authorize]
 public class RepositoriesController : ControllerBase
 {
@@ -22,28 +21,18 @@ public class RepositoriesController : ControllerBase
   [HttpGet("{id}")]
   public async Task<ActionResult<RepositoryWithCollaboratorsResponse>> GetById(int id)
   {
-    var repo = await _repositoryService.GetById(id);
-    return repo == null ? NotFound() : Ok(repo);
-  }
-
-  [HttpGet("my")]
-  public async Task<ActionResult<List<RepositoryWithCollaboratorsResponse>>> GetMyRepositories()
-  {
-    var repos = await _repositoryService.GetByOwnerId(User.GetUserId());
-    return Ok(repos);
-  }
-
-  [HttpPost]
-  public async Task<ActionResult<RepositoryResponse>> Create(CreateRepositoryRequest request)
-  {
     try
     {
-      var created = await _repositoryService.Create(request, User.GetUserId());
-      return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+      var repo = await _repositoryService.GetById(id, User);
+      return Ok(repo);
     }
-    catch (ArgumentException ex)
+    catch (UnauthorizedAccessException)
     {
-      return BadRequest(new { message = ex.Message });
+      return Forbid();
+    }
+    catch (KeyNotFoundException)
+    {
+      return NotFound();
     }
   }
 
@@ -55,7 +44,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      var updated = await _repositoryService.Update(id, request, User.GetUserId(), User.IsAdmin());
+      var updated = await _repositoryService.Update(id, request, User);
       return updated == null ? NotFound() : Ok(updated);
     }
     catch (UnauthorizedAccessException)
@@ -77,7 +66,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      await _repositoryService.Delete(id, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.Delete(id, User);
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -95,7 +84,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      await _repositoryService.AddCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.AddCollaborator(id, userId, User);
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -117,7 +106,7 @@ public class RepositoriesController : ControllerBase
   {
     try
     {
-      await _repositoryService.RemoveCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.RemoveCollaborator(id, userId, User);
       return NoContent();
     }
     catch (UnauthorizedAccessException)

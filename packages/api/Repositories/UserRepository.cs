@@ -19,9 +19,13 @@ public class UserRepository : IUserRepository
     return _db.Users.ToListAsync();
   }
 
-  public Task<User?> GetById(int id)
+  public Task<User?> GetById(int userId)
   {
-    return _db.Users.SingleOrDefaultAsync(u => u.Id == id);
+    return _db
+      .Users.Include(u => u.OwnedRepositories)
+      .Include(u => u.Collaborations)
+      .Include(u => u.SshKeys)
+      .SingleOrDefaultAsync(u => u.Id == userId);
   }
 
   public Task<User?> GetByUsername(string username)

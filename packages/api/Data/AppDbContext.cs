@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
   public DbSet<User> Users { get; set; }
   public DbSet<Repository> Repositories { get; set; }
   public DbSet<UserRepository> UserRepositories { get; set; }
+  public DbSet<SshKey> SshKeys { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
@@ -29,5 +30,12 @@ public class AppDbContext : DbContext
       .HasOne(ur => ur.Repository)
       .WithMany(r => r.Collaborators)
       .HasForeignKey(ur => ur.RepositoryId);
+
+    modelBuilder
+      .Entity<SshKey>()
+      .HasOne(k => k.User)
+      .WithMany(u => u.SshKeys)
+      .HasForeignKey(k => k.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
   }
 }

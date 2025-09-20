@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Api.Entities;
+using Api.Extensions;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Repositories.Interfaces;
@@ -22,20 +24,25 @@ public class UserService : IUserService
     return users.Select(u => new UserResponse(u)).ToList();
   }
 
-  public async Task<UserResponse?> GetById(int id)
+  public async Task<UserFullResponse> GetById(int id, ClaimsPrincipal requester)
   {
-    var user = await _repo.GetById(id);
-    return user == null ? null : new UserResponse(user);
+    // Check permissions
+    if (requester.GetUserId() != id && !requester.IsAdmin())
+      throw new UnauthorizedAccessException("You do not have permission to view this user");
+
+    var user = await _repo.GetById(id) ?? throw new KeyNotFoundException(UserNotFoundMessage);
+
+    return new UserFullResponse(user);
   }
 
-  public async Task<UserResponse> Create(CreateUserRequest request, bool requestingUserIsAdmin)
+  public async Task<UserResponse> Create(CreateUserRequest request, ClaimsPrincipal requester)
   {
     // Check if username already exists
     if (await _repo.GetByUsername(request.Username) != null)
       throw new ArgumentException("Username already exists", nameof(request));
 
     // Role is default to "User" if not provided by admin
-    var role = requestingUserIsAdmin && !string.IsNullOrEmpty(request.Role) ? request.Role : "User";
+    var role = requester.IsAdmin() && !string.IsNullOrEmpty(request.Role) ? request.Role : "User";
 
     var user = new User(username: request.Username, password: request.Password, role: role);
     await _repo.Add(user);
@@ -45,15 +52,14 @@ public class UserService : IUserService
   public async Task<UserResponse> Update(
     int idToUpdate,
     UpdateUserRequest request,
-    int requestingUserId,
-    bool requestingUserIsAdmin
+    ClaimsPrincipal requester
   )
   {
     var user =
       await _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
-    if (requestingUserId != idToUpdate && !requestingUserIsAdmin)
+    if (requester.GetUserId() != idToUpdate && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to update this user");
 
     // Check username uniqueness if it's being changed
@@ -71,7 +77,7 @@ public class UserService : IUserService
     // Update role if provided and requester is admin
     if (!string.IsNullOrEmpty(request.Role))
     {
-      if (!requestingUserIsAdmin)
+      if (!requester.IsAdmin())
         throw new UnauthorizedAccessException("Only admins can change roles");
       user.Role = request.Role;
     }
@@ -80,13 +86,13 @@ public class UserService : IUserService
     return new UserResponse(user);
   }
 
-  public async Task Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
+  public async Task Delete(int idToDelete, ClaimsPrincipal requester)
   {
     var user =
       await _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
-    if (requestingUserId != idToDelete && !requestingUserIsAdmin)
+    if (requester.GetUserId() != idToDelete && !requester.IsAdmin())
       throw new UnauthorizedAccessException("You do not have permission to delete this user");
 
     await _repo.Delete(user);

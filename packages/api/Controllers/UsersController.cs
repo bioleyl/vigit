@@ -1,4 +1,3 @@
-using Api.Extensions;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Services.Interfaces;
@@ -8,17 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/users")]
 [Authorize]
 public class UsersController : ControllerBase
 {
   private readonly IUserService _userService;
-  private readonly IRepositoryService _repositoryService;
 
-  public UsersController(IUserService userService, IRepositoryService repositoryService)
+  public UsersController(IUserService userService)
   {
     _userService = userService;
-    _repositoryService = repositoryService;
   }
 
   [HttpGet]
@@ -29,21 +26,21 @@ public class UsersController : ControllerBase
   }
 
   [HttpGet("{id}")]
-  public async Task<ActionResult<UserResponse>> GetById(int id)
+  public async Task<ActionResult<UserFullResponse>> GetById(int id)
   {
-    var user = await _userService.GetById(id);
-    return user == null ? NotFound() : Ok(user);
-  }
-
-  [HttpGet("{id}/repositories")]
-  public async Task<ActionResult<List<RepositoryResponse>>> GetUserRepositories(int id)
-  {
-    var user = await _userService.GetById(id);
-    if (user == null)
+    try
+    {
+      var user = await _userService.GetById(id, User);
+      return Ok(user);
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return Forbid();
+    }
+    catch (KeyNotFoundException)
+    {
       return NotFound();
-
-    var repos = await _repositoryService.GetByOwnerId(id);
-    return Ok(repos);
+    }
   }
 
   [HttpPost]
@@ -51,7 +48,7 @@ public class UsersController : ControllerBase
   {
     try
     {
-      var created = await _userService.Create(request, User.IsAdmin());
+      var created = await _userService.Create(request, User);
       return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
     catch (UnauthorizedAccessException)
@@ -69,7 +66,7 @@ public class UsersController : ControllerBase
   {
     try
     {
-      var updated = await _userService.Update(id, request, User.GetUserId(), User.IsAdmin());
+      var updated = await _userService.Update(id, request, User);
       return updated == null ? NotFound() : Ok(updated);
     }
     catch (UnauthorizedAccessException)
@@ -91,7 +88,7 @@ public class UsersController : ControllerBase
   {
     try
     {
-      await _userService.Delete(id, User.GetUserId(), User.IsAdmin());
+      await _userService.Delete(id, User);
       return NoContent();
     }
     catch (UnauthorizedAccessException)
