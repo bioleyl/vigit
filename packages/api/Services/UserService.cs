@@ -59,7 +59,7 @@ public class UserService : IUserService
     // Check username uniqueness if it's being changed
     if (!string.IsNullOrEmpty(request.Username) && request.Username != user.Username)
     {
-      if (_repo.GetByUsername(request.Username) != null)
+      if (await _repo.GetByUsername(request.Username) != null)
         throw new ArgumentException("Username already exists");
       user.Username = request.Username;
     }

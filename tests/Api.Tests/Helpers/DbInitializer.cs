@@ -11,18 +11,8 @@ public static class DbInitializer
       return;
 
     context.Users.AddRange(
-      new User
-      {
-        Username = "admin",
-        PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
-        Role = "Admin",
-      },
-      new User
-      {
-        Username = "user",
-        PasswordHash = BCrypt.Net.BCrypt.HashPassword("user"),
-        Role = "User",
-      }
+      new User(username: "admin", password: "admin", role: "Admin"),
+      new User(username: "user", password: "user", role: "User")
     );
 
     context.SaveChanges();

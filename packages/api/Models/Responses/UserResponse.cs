@@ -3,9 +3,11 @@ namespace Api.Models.Responses;
 public class UserResponse
 {
   public int Id { get; set; }
-  public string Username { get; set; }
-  public string Role { get; set; }
+  public string Username { get; set; } = default!;
+  public string Role { get; set; } = default!;
   public DateTime CreatedAt { get; set; }
+
+  public UserResponse() { }
 
   public UserResponse(int id, string username, string role, DateTime createdAt)
   {

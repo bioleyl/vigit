@@ -11,14 +11,10 @@ public static class DbInitializer
     if (context.Users.Any())
       return; // already seeded
 
-    var admin = new User { Username = "admin", Role = "Admin" };
-    admin.SetPassword("admin");
-
-    var user = new User { Username = "user", Role = "User" };
-    user.SetPassword("user");
-
-    context.Users.AddRange(admin, user);
-
+    context.Users.AddRange(
+      new User(username: "admin", password: "admin", role: "Admin"),
+      new User(username: "user", password: "user", role: "User")
+    );
     context.SaveChanges();
   }
 }

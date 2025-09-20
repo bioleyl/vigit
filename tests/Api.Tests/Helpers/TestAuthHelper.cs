@@ -13,12 +13,7 @@ public static class TestAuthHelper
     string role
   )
   {
-    User user = new()
-    {
-      Id = 1,
-      Username = username,
-      Role = role,
-    };
+    User user = new(username: username, password: "test", role: role) { Id = 1 };
     var token = jwtService.CreateToken(user);
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
   }
