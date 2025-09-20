@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Tests.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Tests.Controllers;
 
@@ -55,8 +56,11 @@ public class UserControllerTests : IntegrationTestBase
 
     var user = await response.Content.ReadFromJsonAsync<UserResponse>();
     Assert.NotNull(user);
-    Assert.Equal("newuser", user.Username);
-    Assert.Equal("User", user.Role);
+    Assert.Equal(request.Username, user.Username);
+    Assert.Equal(request.Role, user.Role);
+
+    var userInDb = await _db.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
+    Assert.NotNull(userInDb);
   }
 
   [Fact]
@@ -68,7 +72,10 @@ public class UserControllerTests : IntegrationTestBase
 
     var updatedUser = await response.Content.ReadFromJsonAsync<UserResponse>();
     Assert.NotNull(updatedUser);
-    Assert.Equal("admin_updated", updatedUser.Username);
+    Assert.Equal(request.Username, updatedUser.Username);
+
+    var userInDb = await _db.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
+    Assert.NotNull(userInDb);
   }
 
   [Fact]
@@ -79,5 +86,8 @@ public class UserControllerTests : IntegrationTestBase
 
     var getResponse = await _client.GetAsync($"{UsersUrl}/2");
     Assert.Equal(System.Net.HttpStatusCode.NotFound, getResponse.StatusCode);
+
+    var userInDb = await _db.Users.SingleOrDefaultAsync(u => u.Id == 2);
+    Assert.Null(userInDb);
   }
 }

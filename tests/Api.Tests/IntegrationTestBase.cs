@@ -7,8 +7,9 @@ namespace Api.Tests;
 
 public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {
-  private bool _disposed;
   protected readonly HttpClient _client;
+  protected readonly AppDbContext _db;
+  private bool _disposed;
   private readonly IServiceScope _scope;
 
   protected IntegrationTestBase(CustomWebApplicationFactory factory)
@@ -21,9 +22,9 @@ public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFa
     _client.AddJwtToken(jwtService, "admin", "Admin");
 
     // Create a scope so we can work with DI services
-    var db = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    _db = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    ResetDatabase(db);
+    ResetDatabase(_db);
   }
 
   protected virtual void ResetDatabase(AppDbContext db)
