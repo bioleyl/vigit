@@ -10,10 +10,12 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddControllers();
 
-// Add services.
+// Add repositories.
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
+
+// Add application services.
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 

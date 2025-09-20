@@ -58,6 +58,7 @@ public class UserControllerTests : IntegrationTestBase
     Assert.NotNull(user);
     Assert.Equal(request.Username, user.Username);
     Assert.Equal(request.Role, user.Role);
+    Assert.True(user.Id > 0);
 
     var userInDb = await _db.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
     Assert.NotNull(userInDb);
