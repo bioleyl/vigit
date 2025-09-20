@@ -20,25 +20,25 @@ public class RepositoriesController : ControllerBase
   }
 
   [HttpGet("{id}")]
-  public ActionResult<RepositoryWithCollaboratorsResponse> GetById(int id)
+  public async Task<ActionResult<RepositoryWithCollaboratorsResponse>> GetById(int id)
   {
-    var repo = _repositoryService.GetById(id);
+    var repo = await _repositoryService.GetById(id);
     return repo == null ? NotFound() : Ok(repo);
   }
 
   [HttpGet("my")]
-  public ActionResult<List<RepositoryWithCollaboratorsResponse>> GetMyRepositories()
+  public async Task<ActionResult<List<RepositoryWithCollaboratorsResponse>>> GetMyRepositories()
   {
-    var repos = _repositoryService.GetByOwnerId(User.GetUserId());
+    var repos = await _repositoryService.GetByOwnerId(User.GetUserId());
     return Ok(repos);
   }
 
   [HttpPost]
-  public ActionResult<RepositoryResponse> Create(CreateRepositoryRequest request)
+  public async Task<ActionResult<RepositoryResponse>> Create(CreateRepositoryRequest request)
   {
     try
     {
-      var created = _repositoryService.Create(request, User.GetUserId());
+      var created = await _repositoryService.Create(request, User.GetUserId());
       return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
     catch (ArgumentException ex)
@@ -48,11 +48,14 @@ public class RepositoriesController : ControllerBase
   }
 
   [HttpPut("{id}")]
-  public ActionResult<RepositoryResponse> Update(int id, UpdateRepositoryRequest request)
+  public async Task<ActionResult<RepositoryResponse>> Update(
+    int id,
+    UpdateRepositoryRequest request
+  )
   {
     try
     {
-      var updated = _repositoryService.Update(id, request, User.GetUserId(), User.IsAdmin());
+      var updated = await _repositoryService.Update(id, request, User.GetUserId(), User.IsAdmin());
       return updated == null ? NotFound() : Ok(updated);
     }
     catch (UnauthorizedAccessException)
@@ -70,11 +73,11 @@ public class RepositoriesController : ControllerBase
   }
 
   [HttpDelete("{id}")]
-  public IActionResult Delete(int id)
+  public async Task<IActionResult> Delete(int id)
   {
     try
     {
-      _repositoryService.Delete(id, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.Delete(id, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -88,11 +91,11 @@ public class RepositoriesController : ControllerBase
   }
 
   [HttpPost("{id}/collaborators/{userId}")]
-  public IActionResult AddCollaborator(int id, int userId)
+  public async Task<IActionResult> AddCollaborator(int id, int userId)
   {
     try
     {
-      _repositoryService.AddCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.AddCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)
@@ -110,11 +113,11 @@ public class RepositoriesController : ControllerBase
   }
 
   [HttpDelete("{id}/collaborators/{userId}")]
-  public IActionResult RemoveCollaborator(int id, int userId)
+  public async Task<IActionResult> RemoveCollaborator(int id, int userId)
   {
     try
     {
-      _repositoryService.RemoveCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
+      await _repositoryService.RemoveCollaborator(id, userId, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)

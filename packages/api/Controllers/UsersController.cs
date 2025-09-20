@@ -22,36 +22,36 @@ public class UsersController : ControllerBase
   }
 
   [HttpGet]
-  public ActionResult<List<UserResponse>> GetAll()
+  public async Task<ActionResult<List<UserResponse>>> GetAll()
   {
-    var users = _userService.GetAll();
+    var users = await _userService.GetAll();
     return Ok(users);
   }
 
   [HttpGet("{id}")]
-  public ActionResult<UserResponse> GetById(int id)
+  public async Task<ActionResult<UserResponse>> GetById(int id)
   {
-    var user = _userService.GetById(id);
+    var user = await _userService.GetById(id);
     return user == null ? NotFound() : Ok(user);
   }
 
   [HttpGet("{id}/repositories")]
-  public ActionResult<List<RepositoryResponse>> GetUserRepositories(int id)
+  public async Task<ActionResult<List<RepositoryResponse>>> GetUserRepositories(int id)
   {
-    var user = _userService.GetById(id);
+    var user = await _userService.GetById(id);
     if (user == null)
       return NotFound();
 
-    var repos = _repositoryService.GetByOwnerId(id);
+    var repos = await _repositoryService.GetByOwnerId(id);
     return Ok(repos);
   }
 
   [HttpPost]
-  public ActionResult<UserResponse> Create(CreateUserRequest request)
+  public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request)
   {
     try
     {
-      var created = _userService.Create(request, User.IsAdmin());
+      var created = await _userService.Create(request, User.IsAdmin());
       return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
     catch (UnauthorizedAccessException)
@@ -65,11 +65,11 @@ public class UsersController : ControllerBase
   }
 
   [HttpPut("{id}")]
-  public ActionResult<UserResponse> Update(int id, UpdateUserRequest request)
+  public async Task<ActionResult<UserResponse>> Update(int id, UpdateUserRequest request)
   {
     try
     {
-      var updated = _userService.Update(id, request, User.GetUserId(), User.IsAdmin());
+      var updated = await _userService.Update(id, request, User.GetUserId(), User.IsAdmin());
       return updated == null ? NotFound() : Ok(updated);
     }
     catch (UnauthorizedAccessException)
@@ -87,11 +87,11 @@ public class UsersController : ControllerBase
   }
 
   [HttpDelete("{id}")]
-  public IActionResult Delete(int id)
+  public async Task<IActionResult> Delete(int id)
   {
     try
     {
-      _userService.Delete(id, User.GetUserId(), User.IsAdmin());
+      await _userService.Delete(id, User.GetUserId(), User.IsAdmin());
       return NoContent();
     }
     catch (UnauthorizedAccessException)

@@ -4,15 +4,15 @@ namespace Api.Repositories.Interfaces;
 
 public interface IRepositoryRepository
 {
-  public Repository? GetById(int id);
-  public List<Repository> GetAll();
-  public List<Repository> GetByOwnerId(int ownerId);
-  public void Add(Repository repository);
-  public void Update(Repository repository);
-  public void Delete(Repository repository);
+  public Task<Repository?> GetById(int id);
+  public Task<List<Repository>> GetAll();
+  public Task<List<Repository>> GetByOwnerId(int ownerId);
+  public Task Add(Repository repository);
+  public Task Update(Repository repository);
+  public Task Delete(Repository repository);
 
   // Collaborators
-  public void AddCollaborator(Entities.UserRepository userRepository);
-  public void RemoveCollaborator(Entities.UserRepository userRepository);
-  public List<User> GetCollaborators(int repositoryId);
+  public Task AddCollaborator(Entities.UserRepository userRepository);
+  public Task RemoveCollaborator(Entities.UserRepository userRepository);
+  public Task<List<User>> GetCollaborators(int repositoryId);
 }

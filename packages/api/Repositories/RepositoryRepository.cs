@@ -14,61 +14,61 @@ public class RepositoryRepository : IRepositoryRepository
     _db = db;
   }
 
-  public Repository? GetById(int id)
+  public Task<Repository?> GetById(int id)
   {
     return _db
       .Repositories.Include(r => r.Owner)
       .Include(r => r.Collaborators)
       .ThenInclude(ur => ur.User)
-      .SingleOrDefault(r => r.Id == id);
+      .SingleOrDefaultAsync(r => r.Id == id);
   }
 
-  public List<Repository> GetAll()
+  public Task<List<Repository>> GetAll()
   {
-    return [.. _db.Repositories.Include(r => r.Owner)];
+    return _db.Repositories.Include(r => r.Owner).ToListAsync();
   }
 
-  public List<Repository> GetByOwnerId(int ownerId)
+  public Task<List<Repository>> GetByOwnerId(int ownerId)
   {
-    return [.. _db.Repositories.Where(r => r.OwnerId == ownerId).Include(r => r.Owner)];
+    return _db.Repositories.Where(r => r.OwnerId == ownerId).Include(r => r.Owner).ToListAsync();
   }
 
-  public void Add(Repository repository)
+  public Task Add(Repository repository)
   {
     _db.Repositories.Add(repository);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public void Update(Repository repository)
+  public Task Update(Repository repository)
   {
     _db.Repositories.Update(repository);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public void Delete(Repository repository)
+  public Task Delete(Repository repository)
   {
     _db.Repositories.Remove(repository);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
   // Collaborators
-  public void AddCollaborator(Entities.UserRepository userRepository)
+  public Task AddCollaborator(Entities.UserRepository userRepository)
   {
     _db.UserRepositories.Add(userRepository);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public void RemoveCollaborator(Entities.UserRepository userRepository)
+  public Task RemoveCollaborator(Entities.UserRepository userRepository)
   {
     _db.UserRepositories.Remove(userRepository);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public List<User> GetCollaborators(int repositoryId)
+  public Task<List<User>> GetCollaborators(int repositoryId)
   {
-    return
-    [
-      .. _db.UserRepositories.Where(ur => ur.RepositoryId == repositoryId).Select(ur => ur.User),
-    ];
+    return _db
+      .UserRepositories.Where(ur => ur.RepositoryId == repositoryId)
+      .Select(ur => ur.User)
+      .ToListAsync();
   }
 }

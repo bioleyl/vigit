@@ -16,36 +16,42 @@ public class RepositoryService : IRepositoryService
     _repo = repo;
   }
 
-  public RepositoryWithCollaboratorsResponse? GetById(int id)
+  public async Task<RepositoryWithCollaboratorsResponse?> GetById(int id)
   {
-    var repo = _repo.GetById(id);
+    var repo = await _repo.GetById(id);
     return repo == null ? null : new RepositoryWithCollaboratorsResponse(repo);
   }
 
-  public List<RepositoryResponse> GetByOwnerId(int ownerId)
+  public async Task<List<RepositoryResponse>> GetByOwnerId(int ownerId)
   {
-    return [.. _repo.GetByOwnerId(ownerId).Select(r => new RepositoryResponse(r))];
+    var repos = await _repo.GetByOwnerId(ownerId);
+    return repos.Select(r => new RepositoryResponse(r)).ToList();
   }
 
-  public RepositoryResponse Create(CreateRepositoryRequest request, int ownerId)
+  public async Task<List<RepositoryResponse>> GetAll()
   {
-    var existing = _repo.GetByOwnerId(ownerId);
+    var repos = await _repo.GetAll();
+    return repos.Select(r => new RepositoryResponse(r)).ToList();
+  }
+
+  public async Task<RepositoryResponse> Create(CreateRepositoryRequest request, int ownerId)
+  {
+    var existing = await _repo.GetByOwnerId(ownerId);
     if (existing.Any(r => r.Name == request.Name))
       throw new ArgumentException("Repository name already exists for this user");
 
-    var repo = new Repository
-    {
-      Name = request.Name,
-      Description = request.Description,
-      OwnerId = ownerId,
-    };
+    var repo = new Repository(
+      name: request.Name,
+      description: request.Description,
+      ownerId: ownerId
+    );
 
-    _repo.Add(repo);
+    await _repo.Add(repo);
 
     return new RepositoryResponse(repo);
   }
 
-  public RepositoryResponse Update(
+  public async Task<RepositoryResponse> Update(
     int idToUpdate,
     UpdateRepositoryRequest request,
     int requestingUserId,
@@ -53,7 +59,7 @@ public class RepositoryService : IRepositoryService
   )
   {
     var repo =
-      _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
+      await _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
     if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
@@ -62,7 +68,7 @@ public class RepositoryService : IRepositoryService
     // Check name uniqueness if it's being changed
     if (!string.IsNullOrEmpty(request.Name) && request.Name != repo.Name)
     {
-      var existing = _repo.GetByOwnerId(repo.OwnerId);
+      var existing = await _repo.GetByOwnerId(repo.OwnerId);
       if (existing.Any(r => r.Name == request.Name))
         throw new ArgumentException("Repository name already exists for this user");
       repo.Name = request.Name;
@@ -72,30 +78,30 @@ public class RepositoryService : IRepositoryService
     if (request.Description != null)
       repo.Description = request.Description;
 
-    _repo.Update(repo);
+    await _repo.Update(repo);
     return new RepositoryResponse(repo);
   }
 
-  public void Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
+  public async Task Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
   {
     var repo =
-      _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
+      await _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
     if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
       throw new UnauthorizedAccessException("You do not have permission to delete this repository");
 
-    _repo.Delete(repo);
+    await _repo.Delete(repo);
   }
 
-  public void AddCollaborator(
+  public async Task AddCollaborator(
     int id,
     int userIdToAdd,
     int requestingUserId,
     bool requestingUserIsAdmin
   )
   {
-    var repo = _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
+    var repo = await _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
     if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
@@ -105,18 +111,18 @@ public class RepositoryService : IRepositoryService
     if (repo.Collaborators.Any(ur => ur.UserId == userIdToAdd))
       throw new ArgumentException("User is already a collaborator");
 
-    var userRepository = new UserRepository { UserId = userIdToAdd, RepositoryId = id };
-    _repo.AddCollaborator(userRepository);
+    var userRepository = new UserRepository(userId: userIdToAdd, repositoryId: id);
+    await _repo.AddCollaborator(userRepository);
   }
 
-  public void RemoveCollaborator(
+  public async Task RemoveCollaborator(
     int id,
     int userIdToRemove,
     int requestingUserId,
     bool requestingUserIsAdmin
   )
   {
-    var repo = _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
+    var repo = await _repo.GetById(id) ?? throw new KeyNotFoundException(RepositoryNotFoundMessage);
 
     // Check permissions
     if (repo.OwnerId != requestingUserId && !requestingUserIsAdmin)
@@ -127,6 +133,6 @@ public class RepositoryService : IRepositoryService
       repo.Collaborators.SingleOrDefault(ur => ur.UserId == userIdToRemove)
       ?? throw new KeyNotFoundException("User is not a collaborator");
 
-    _repo.RemoveCollaborator(userRepository);
+    await _repo.RemoveCollaborator(userRepository);
   }
 }

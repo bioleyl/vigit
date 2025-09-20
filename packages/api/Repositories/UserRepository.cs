@@ -1,6 +1,7 @@
 using Api.Data;
 using Api.Entities;
 using Api.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repositories;
 
@@ -13,36 +14,36 @@ public class UserRepository : IUserRepository
     _db = db;
   }
 
-  public List<User> GetAll()
+  public Task<List<User>> GetAll()
   {
-    return [.. _db.Users];
+    return _db.Users.ToListAsync();
   }
 
-  public User? GetById(int id)
+  public Task<User?> GetById(int id)
   {
-    return _db.Users.SingleOrDefault(u => u.Id == id);
+    return _db.Users.SingleOrDefaultAsync(u => u.Id == id);
   }
 
-  public User? GetByUsername(string username)
+  public Task<User?> GetByUsername(string username)
   {
-    return _db.Users.SingleOrDefault(u => u.Username == username);
+    return _db.Users.SingleOrDefaultAsync(u => u.Username == username);
   }
 
-  public void Add(User user)
+  public Task Add(User user)
   {
     _db.Users.Add(user);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public void Update(User user)
+  public Task Update(User user)
   {
     _db.Users.Update(user);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 
-  public void Delete(User user)
+  public Task Delete(User user)
   {
     _db.Users.Remove(user);
-    _db.SaveChanges();
+    return _db.SaveChangesAsync();
   }
 }

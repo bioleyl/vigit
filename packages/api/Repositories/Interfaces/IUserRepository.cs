@@ -4,10 +4,10 @@ namespace Api.Repositories.Interfaces;
 
 public interface IUserRepository
 {
-  public List<User> GetAll();
-  public User? GetById(int id);
-  public User? GetByUsername(string username);
-  public void Add(User user);
-  public void Update(User user);
-  public void Delete(User user);
+  public Task<List<User>> GetAll();
+  public Task<User?> GetById(int id);
+  public Task<User?> GetByUsername(string username);
+  public Task Add(User user);
+  public Task Update(User user);
+  public Task Delete(User user);
 }

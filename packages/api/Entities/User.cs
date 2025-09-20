@@ -1,29 +1,27 @@
-using Api.Models.Requests;
-using Api.Models.Responses;
+using Api.Models.Enums;
 
 namespace Api.Entities;
 
 public class User
 {
   public int Id { get; set; }
+
   public string Username { get; set; } = null!;
   public string PasswordHash { get; set; } = null!;
-  public string Role { get; set; } = "User"; // default role
+  public string Role { get; set; } = UserRole.User;
   public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-  // Owned repositories
   public List<Repository> OwnedRepositories { get; set; } = [];
-
-  // Collaborations
   public List<UserRepository> Collaborations { get; set; } = [];
 
-  public User() { }
+  protected User() { }
 
-  public User(CreateUserRequest request)
+  public User(string username, string password, string role = UserRole.User)
   {
-    Username = request.Username;
-    Role = request.Role;
-    SetPassword(request.Password);
+    Username = username;
+    SetPassword(password);
+    Role = role;
+    CreatedAt = DateTime.UtcNow;
   }
 
   public void SetPassword(string password)

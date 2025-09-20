@@ -16,40 +16,41 @@ public class UserService : IUserService
     _repo = repo;
   }
 
-  public List<UserResponse> GetAll()
+  public async Task<List<UserResponse>> GetAll()
   {
-    return [.. _repo.GetAll().Select(u => new UserResponse(u))];
+    var users = await _repo.GetAll();
+    return users.Select(u => new UserResponse(u)).ToList();
   }
 
-  public UserResponse? GetById(int id)
+  public async Task<UserResponse?> GetById(int id)
   {
-    var user = _repo.GetById(id);
+    var user = await _repo.GetById(id);
     return user == null ? null : new UserResponse(user);
   }
 
-  public UserResponse Create(CreateUserRequest request, bool requestingUserIsAdmin)
+  public async Task<UserResponse> Create(CreateUserRequest request, bool requestingUserIsAdmin)
   {
     // Check if username already exists
-    if (_repo.GetByUsername(request.Username) != null)
+    if (await _repo.GetByUsername(request.Username) != null)
       throw new ArgumentException("Username already exists");
 
     // Role is default to "User" if not provided by admin
     var role = requestingUserIsAdmin && !string.IsNullOrEmpty(request.Role) ? request.Role : "User";
 
-    var user = new User { Username = request.Username, Role = role };
-    user.SetPassword(request.Password);
-    _repo.Add(user);
+    var user = new User(username: request.Username, password: request.Password, role: role);
+    await _repo.Add(user);
     return new UserResponse(user);
   }
 
-  public UserResponse Update(
+  public async Task<UserResponse> Update(
     int idToUpdate,
     UpdateUserRequest request,
     int requestingUserId,
     bool requestingUserIsAdmin
   )
   {
-    var user = _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(UserNotFoundMessage);
+    var user =
+      await _repo.GetById(idToUpdate) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
     if (requestingUserId != idToUpdate && !requestingUserIsAdmin)
@@ -75,18 +76,19 @@ public class UserService : IUserService
       user.Role = request.Role;
     }
 
-    _repo.Update(user);
+    await _repo.Update(user);
     return new UserResponse(user);
   }
 
-  public void Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
+  public async Task Delete(int idToDelete, int requestingUserId, bool requestingUserIsAdmin)
   {
-    var user = _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(UserNotFoundMessage);
+    var user =
+      await _repo.GetById(idToDelete) ?? throw new KeyNotFoundException(UserNotFoundMessage);
 
     // Check permissions
     if (requestingUserId != idToDelete && !requestingUserIsAdmin)
       throw new UnauthorizedAccessException("You do not have permission to delete this user");
 
-    _repo.Delete(user);
+    await _repo.Delete(user);
   }
 }

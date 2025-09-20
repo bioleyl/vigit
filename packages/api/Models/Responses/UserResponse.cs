@@ -3,11 +3,17 @@ namespace Api.Models.Responses;
 public class UserResponse
 {
   public int Id { get; set; }
-  public string Username { get; set; } = null!;
-  public string Role { get; set; } = null!;
+  public string Username { get; set; }
+  public string Role { get; set; }
   public DateTime CreatedAt { get; set; }
 
-  public UserResponse() { }
+  public UserResponse(int id, string username, string role, DateTime createdAt)
+  {
+    Id = id;
+    Username = username;
+    Role = role;
+    CreatedAt = createdAt;
+  }
 
   public UserResponse(Entities.User user)
   {

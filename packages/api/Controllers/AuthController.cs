@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using Api.Data;
 using Api.Models.Requests;
 using Api.Models.Responses;
 using Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
@@ -23,9 +23,9 @@ public class AuthController : ControllerBase
   [HttpPost("login")]
   [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(object), StatusCodes.Status401Unauthorized)]
-  public ActionResult<LoginResponse> Login(LoginRequest request)
+  public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
   {
-    var user = _context.Users.SingleOrDefault(u => u.Username == request.Username);
+    var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == request.Username);
     if (user == null || !user.VerifyPassword(request.Password))
     {
       return Unauthorized(new { message = "Invalid credentials" });
