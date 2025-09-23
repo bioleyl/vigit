@@ -41,4 +41,9 @@ public class SshKeyRepository : ISshKeyRepository
     _db.SshKeys.Remove(key);
     return _db.SaveChangesAsync();
   }
+
+  public Task<SshKey?> GetByBlob(string blob)
+  {
+    return _db.SshKeys.FirstOrDefaultAsync(k => k.Blob == blob);
+  }
 }

@@ -102,4 +102,10 @@ public class SshKeyService : ISshKeyService
 
     await _repo.Delete(key);
   }
+
+  public async Task<SshKeyResponse> GetByBlob(string blob)
+  {
+    var sshKey = await _repo.GetByBlob(blob) ?? throw new KeyNotFoundException("SSH key not found");
+    return new SshKeyResponse(sshKey);
+  }
 }

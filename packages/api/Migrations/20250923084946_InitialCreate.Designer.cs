@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250914142818_InitialCreate")]
+    [Migration("20250923084946_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -47,6 +47,41 @@ namespace Api.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Repositories");
+                });
+
+            modelBuilder.Entity("Api.Entities.SshKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Blob")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SshKeys");
                 });
 
             modelBuilder.Entity("Api.Entities.User", b =>
@@ -105,6 +140,17 @@ namespace Api.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Api.Entities.SshKey", b =>
+                {
+                    b.HasOne("Api.Entities.User", "User")
+                        .WithMany("SshKeys")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Api.Entities.UserRepository", b =>
                 {
                     b.HasOne("Api.Entities.Repository", "Repository")
@@ -134,6 +180,8 @@ namespace Api.Migrations
                     b.Navigation("Collaborations");
 
                     b.Navigation("OwnedRepositories");
+
+                    b.Navigation("SshKeys");
                 });
 #pragma warning restore 612, 618
         }

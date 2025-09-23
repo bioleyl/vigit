@@ -1,5 +1,4 @@
 using Api.Services;
-using Api.Services.Interfaces;
 using Api.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 

@@ -8,6 +8,7 @@ public interface ISshKeyService
 {
   public Task<SshKeyResponse> GetById(int id, ClaimsPrincipal requester);
   public Task<List<SshKeyResponse>> GetByOwnerId(int ownerId, ClaimsPrincipal requester);
+  public Task<SshKeyResponse> GetByBlob(string blob);
   public Task<SshKeyResponse> Create(
     CreateSshKeyRequest request,
     int ownerId,

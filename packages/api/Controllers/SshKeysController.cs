@@ -75,4 +75,26 @@ public class SshKeysController : ControllerBase
       return NotFound();
     }
   }
+
+  // This method is public, even though the controller is protected
+  [HttpGet("lookup/{escapedBlob}")]
+  [AllowAnonymous]
+  public async Task<IActionResult> Lookup(string escapedBlob)
+  {
+    var blob = escapedBlob;
+    if (string.IsNullOrEmpty(blob))
+      return BadRequest();
+
+    blob = Uri.UnescapeDataString(blob);
+
+    try
+    {
+      var key = await _sshService.GetByBlob(blob);
+      return Content(key.PublicKey);
+    }
+    catch (KeyNotFoundException)
+    {
+      return NotFound();
+    }
+  }
 }

@@ -15,4 +15,9 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Templates\*.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

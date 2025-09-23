@@ -52,14 +52,22 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("PublicKey")
+                    b.Property<string>("Blob")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("longtext");
 
