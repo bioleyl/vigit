@@ -3,40 +3,40 @@ using Microsoft.Extensions.Options;
 
 namespace Api.Extensions;
 
-public static class GitSshExtensions
+public static class GitExtensions
 {
-  public static IServiceCollection AddGitSshConfiguration(
+  public static IServiceCollection AddGitConfiguration(
     this IServiceCollection services,
     IConfiguration configuration
   )
   {
     // Bind and validate settings
-    var sshSettings =
-      configuration.GetSection("GitSsh").Get<GitSshSettings>()
-      ?? throw new InvalidOperationException("GitSsh section missing");
-    sshSettings.Validate();
+    var gitSettings =
+      configuration.GetSection("Git").Get<GitSettings>()
+      ?? throw new InvalidOperationException("Git section missing");
+    gitSettings.Validate();
 
     // Registering settings for DI
-    services.Configure<GitSshSettings>(configuration.GetSection("GitSsh"));
+    services.Configure<GitSettings>(configuration.GetSection("Git"));
 
     return services;
   }
 
-  public static void WriteGitSshConfigFiles(
+  public static void WriteGitConfigFiles(
     this IServiceProvider services,
     string templateDir = "Templates"
   )
   {
     // Get settings from DI
-    var sshSettings = services.GetRequiredService<IOptions<GitSshSettings>>().Value;
-    sshSettings.Validate();
+    var gitSettings = services.GetRequiredService<IOptions<GitSettings>>().Value;
+    gitSettings.Validate();
 
     // Compute full template path
     var fullTemplateDir = Path.Combine(AppContext.BaseDirectory, templateDir);
 
     // Ensure target directory exists
-    if (!Directory.Exists(sshSettings.TargetScriptDir))
-      Directory.CreateDirectory(sshSettings.TargetScriptDir);
+    if (!Directory.Exists(gitSettings.TargetScriptDir))
+      Directory.CreateDirectory(gitSettings.TargetScriptDir);
 
     // Define scripts to generate
     var scripts = new Dictionary<string, string>
@@ -47,15 +47,17 @@ public static class GitSshExtensions
 
     foreach (var scriptTemplate in scripts)
     {
-      var outputPath = Path.Combine(sshSettings.TargetScriptDir, scriptTemplate.Key);
+      var outputPath = Path.Combine(gitSettings.TargetScriptDir, scriptTemplate.Key);
 
       if (!File.Exists(scriptTemplate.Value))
         throw new FileNotFoundException("Template not found", scriptTemplate.Value);
 
       // Read template and replace placeholders
       var content = File.ReadAllText(scriptTemplate.Value)
-        .Replace("{{AppUrl}}", sshSettings.AppUrl)
-        .Replace("{{GitUser}}", sshSettings.GitUser);
+        .Replace("{{AppUrl}}", gitSettings.AppUrl)
+        .Replace("{{GitUser}}", gitSettings.GitUser)
+        .Replace("{{ScriptPath}}", gitSettings.TargetScriptDir)
+        .Replace("{{RepoRoot}}", gitSettings.RepositoriesRoot);
 
       // Write final script
       File.WriteAllText(outputPath, content);

@@ -23,6 +23,15 @@ public class RepositoryRepository : IRepositoryRepository
       .SingleOrDefaultAsync(r => r.Id == id);
   }
 
+  public Task<Repository?> GetByName(string name)
+  {
+    return _db
+      .Repositories.Include(r => r.Owner)
+      .Include(r => r.Collaborators)
+      .ThenInclude(ur => ur.User)
+      .SingleOrDefaultAsync(r => r.Name == name);
+  }
+
   public Task<List<Repository>> GetAll()
   {
     return _db.Repositories.Include(r => r.Owner).ToListAsync();

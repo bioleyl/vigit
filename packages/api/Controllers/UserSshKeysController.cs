@@ -42,7 +42,7 @@ public class UserSshKeysController : ControllerBase
     try
     {
       var created = await _sshService.Create(request, id, User);
-      return CreatedAtAction(nameof(SshKeysController.GetById), new { id = created.Id }, created);
+      return CreatedAtRoute("GetSshKeyById", new { id = created.Id }, created);
     }
     catch (UnauthorizedAccessException)
     {

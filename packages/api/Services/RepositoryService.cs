@@ -12,10 +12,12 @@ public class RepositoryService : IRepositoryService
 {
   private const string RepositoryNotFoundMessage = "Repository not found";
   private readonly IRepositoryRepository _repo;
+  private readonly IGitRepository _gitRepository;
 
-  public RepositoryService(IRepositoryRepository repo)
+  public RepositoryService(IRepositoryRepository repo, IGitRepository gitRepository)
   {
     _repo = repo;
+    _gitRepository = gitRepository;
   }
 
   public async Task<RepositoryWithCollaboratorsResponse> GetById(int id, ClaimsPrincipal requester)
@@ -61,6 +63,9 @@ public class RepositoryService : IRepositoryService
       description: request.Description,
       ownerId: ownerId
     );
+
+    // Initialize bare git repository
+    _gitRepository.InitBareRepository(repo.Name);
 
     await _repo.Add(repo);
 

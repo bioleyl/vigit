@@ -18,7 +18,7 @@ public class RepositoriesController : ControllerBase
     _repositoryService = repositoryService;
   }
 
-  [HttpGet("{id}")]
+  [HttpGet("{id}", Name = "GetRepositoryById")]
   public async Task<ActionResult<RepositoryWithCollaboratorsResponse>> GetById(int id)
   {
     try

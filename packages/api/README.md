@@ -14,8 +14,8 @@ dotnet ef database update
 
 in powershel, create a ssh key
 ```
-ssh-keygen -t ed25519 -C "myemail@example.com" -f $HOME/.ssh/vigit_test_key
-cat $HOME/.ssh/vigit_test_key.pub
+ssh-keygen -t rsa -b 4096 -C "leal@yourdomain.com"
+cat $HOME/.ssh/id_rsa.pub
 ```
 
 > For the moment, add it manually into the DB
@@ -27,7 +27,7 @@ ip addr show eth0
 
 from windows
 ```
-ssh -i C:\Users\lealb\.ssh\vigit_test_key git@<WSL_IP> "git-receive-pack /tmp/testrepo.git"
+git clone ssh://git@<WSL_IP>/test.git
 ```
 
 # Vigit
@@ -60,7 +60,6 @@ create the file `/etc/ssh/sshd_config.d/git.conf`
 Match User git
   AuthorizedKeysCommand /opt/vigit/scripts/authorized-keys %k
   AuthorizedKeysCommandUser git
-  ForceCommand /opt/vigit/scripts/git-wrapper
   AllowTcpForwarding no
   X11Forwarding no
   PasswordAuthentication no

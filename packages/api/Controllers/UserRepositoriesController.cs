@@ -46,13 +46,13 @@ public class UserRepositoriesController : ControllerBase
     try
     {
       var created = await _repositoryService.Create(request, id, User);
-      return CreatedAtAction(
-        nameof(RepositoriesController.GetById),
-        new { id = created.Id },
-        created
-      );
+      return CreatedAtRoute("GetRepositoryById", new { id = created.Id }, created);
     }
     catch (ArgumentException ex)
+    {
+      return BadRequest(new { message = ex.Message });
+    }
+    catch (InvalidOperationException ex)
     {
       return BadRequest(new { message = ex.Message });
     }

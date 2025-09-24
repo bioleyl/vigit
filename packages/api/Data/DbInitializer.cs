@@ -26,13 +26,20 @@ public static class DbInitializer
     context.Repositories.Add(repo);
     context.SaveChanges();
 
-    var sshKey = new SshKey(
+    var sshKeyEd25519 = new SshKey(
       userId: normalUser.Id,
-      title: "initial-key",
+      title: "initial-ed25519-key",
       publicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJDJxKIFunk9SQy2dpoNK0xULA2EvX/t7MwORerG51Qc myemail@example.com"
     );
 
-    context.SshKeys.Add(sshKey);
+    var sshKeyRsa = new SshKey(
+      userId: normalUser.Id,
+      title: "initial-rsa-key",
+      publicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDLabxoGoExjoDn5b2g39uAIgH4soUMCPHcWhOZLohmo6Kopuvs6We9hNobJq0klHWewpzLXP6vYVsQzXBYqB2uHH+grRZW4houA5kejZW+ZuDUBdPHhtiZJw9XSDlVb+wy7DjgKxbBbhiyrVhPdNBv0Op73W8NFMUtmXBa5JaOOK+7lR2JbvapzL6EDzPF96tScvZZJOlu3C2qEgARFm01v/qsO2YAUfRVoxgWypP7SyqU9gTc/HotcZVwQbBYO7rOhkR6KQxZxeC7RSdapsetMlTGcOOaxTyGXHwE4ngcjnBjd5hXba4hbzIIK9kTLvu+jp1qlz1oKOMndW7o8Q1A702eSvgs2HUDrQlv+PX5M7TL5nVzuuJeb0Lmxl+KkSShMAaN4uJQ2Uqa9nLMB47fgGcoTM8cybqMUx32ydiVmb0c6uw43KvUxB0k+WonEeI9yS54djsKNzkgaveabgkAyOlTH908wWUBAieqT/DLObj/iyNBtLIiFXeROD4rnYefI5GbrLUflQqw4b0I3Z/i8Czm4ag0FhKOkzVJ8Q4SdlyJyr82uNbQLQlYkiqzeqmuBcewGO7/Qhr21ZBRKZYhLAe/nWSJQa81TMCyLhrOC+HPeLOq+uBqQXZMpnsrim9Ad1+f5SzFWUjakyI+gywmJaCNxN1MrfZChpwAzAI18w== leal@yourdomain.com"
+    );
+
+    context.SshKeys.Add(sshKeyEd25519);
+    context.SshKeys.Add(sshKeyRsa);
 
     context.SaveChanges();
   }

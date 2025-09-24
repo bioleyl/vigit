@@ -2,8 +2,9 @@
 # Authorized Keys script for SSH
 # User: {{GitUser}}
 
-SSH_BLOB="$1"
+SSH_KEY="$1"
 
+# URL-encode function (pure Bash)
 urlencode() {
     local string="${1}"
     local strlen=${#string}
@@ -21,10 +22,14 @@ urlencode() {
     echo "$encoded"
 }
 
-BLOB_ENCODED=$(urlencode "$SSH_BLOB")
+KEY_ENCODED=$(urlencode "$SSH_KEY")
 
-RESPONSE=$(curl -fsS "{{AppUrl}}/api/ssh-keys/lookup/$BLOB_ENCODED")
+# Call the API to check if the key exists
+RESPONSE=$(/usr/bin/curl -fsS "{{AppUrl}}/api/ssh-keys/lookup/$KEY_ENCODED")
 
+# If API returns 200 OK, print the key
 if [ -n "$RESPONSE" ]; then
-    echo "$RESPONSE"
+    # echo "$RESPONSE"
+    echo "command=\"{{ScriptPath}}/git-wrapper $SSH_KEY\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty $RESPONSE"
 fi
+# If API returns 404 or any error, do nothing (deny access)

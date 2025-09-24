@@ -18,7 +18,7 @@ public class SshKeysController : ControllerBase
     _sshService = sshService;
   }
 
-  [HttpGet("{id}")]
+  [HttpGet("{id}", Name = "GetSshKeyById")]
   public async Task<ActionResult<SshKeyResponse>> GetById(int id)
   {
     try
@@ -90,6 +90,10 @@ public class SshKeysController : ControllerBase
     try
     {
       var key = await _sshService.GetByBlob(blob);
+      // var command =
+      //   $"command=\"/opt/vigit/scripts/git-wrapper --keyid={key.Id}\",no-agent-forwarding,no-port-forwarding,no-X11-forwarding {key.PublicKey}";
+      // Console.WriteLine(command);
+      // return Content(command, "text/plain");
       return Content(key.PublicKey);
     }
     catch (KeyNotFoundException)
